@@ -6,7 +6,7 @@ Train PyTorch FasterRCNN models easily on any custom dataset. Choose between off
 
 ***You can run a Faster RCNN model with Mini Darknet backbone and Mini Detection Head at more than 150 FPS on an RTX 3080***.
 
-![](readme_images/gif_1.gif)
+![]()
 
 ## Get Started
 
