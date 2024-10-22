@@ -275,13 +275,12 @@ class CustomDataset(Dataset):
             torch.tensor(np.array(final_classes)), area, iscrowd, dims
 
     def __getitem__(self, idx):
-        if not self.train: # No mosaic during validation.
+        if not self.train:
             image, image_resized, orig_boxes, boxes, \
                 labels, area, iscrowd, dims = self.load_image_and_labels(
                 index=idx
             )
-
-        if self.train: 
+        if self.train:
             mosaic_prob = random.uniform(0.0, 1.0)
             if self.mosaic >= mosaic_prob:
                 image_resized, boxes, labels, \
@@ -294,33 +293,47 @@ class CustomDataset(Dataset):
                     index=idx
                 )
 
-        # Prepare the final `target` dictionary.
+        # Convert labels to list for albumentations
+        if isinstance(labels, torch.Tensor):
+            labels_list = labels.tolist()
+        else:
+            labels_list = labels
+
+        # Prepare the final `target` dictionary with tensor
         target = {}
         target["boxes"] = boxes
-        target["labels"] = labels
+        target["labels"] = labels  # Keep as tensor
         target["area"] = area
         target["iscrowd"] = iscrowd
-        image_id = torch.tensor([idx])
-        target["image_id"] = image_id
+        target["image_id"] = torch.tensor([idx])
 
-        if self.use_train_aug: # Use train augmentation if argument is passed.
+        if self.use_train_aug:
             train_aug = get_train_aug()
-            sample = train_aug(image=image_resized,
-                                     bboxes=target['boxes'],
-                                     labels=labels)
+            sample = train_aug(
+                image=image_resized,
+                bboxes=target['boxes'].numpy().tolist() if isinstance(target['boxes'], torch.Tensor) else target[
+                    'boxes'],
+                labels=labels_list  # Use list version for transforms
+            )
             image_resized = sample['image']
-            target['boxes'] = torch.Tensor(sample['bboxes']).to(torch.int64)
+            target['boxes'] = torch.Tensor(sample['bboxes'])
         else:
-            sample = self.transforms(image=image_resized,
-                                     bboxes=target['boxes'],
-                                     labels=labels)
+            sample = self.transforms(
+                image=image_resized,
+                bboxes=target['boxes'].numpy().tolist() if isinstance(target['boxes'], torch.Tensor) else target[
+                    'boxes'],
+                labels=labels_list  # Use list version for transforms
+            )
             image_resized = sample['image']
-            target['boxes'] = torch.Tensor(sample['bboxes']).to(torch.int64)
+            target['boxes'] = torch.Tensor(sample['bboxes'])
 
-        # Fix to enable training without target bounding boxes,
-        # see https://discuss.pytorch.org/t/fasterrcnn-images-with-no-objects-present-cause-an-error/117974/4
+        # Convert boxes back to int64
+        target['boxes'] = target['boxes'].to(torch.int64)
+
+        # Fix for empty boxes
         if np.isnan((target['boxes']).numpy()).any() or target['boxes'].shape == torch.Size([0]):
             target['boxes'] = torch.zeros((0, 4), dtype=torch.int64)
+
         return image_resized, target
 
     def __len__(self):
