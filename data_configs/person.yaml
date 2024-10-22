@@ -1,0 +1,21 @@
+# Images and labels direcotry should be relative to train.py
+TRAIN_DIR_IMAGES: '../input/Train/Train/JPEGImages'
+TRAIN_DIR_LABELS: '../input/Train/Train/JPEGImages'
+VALID_DIR_IMAGES: '../input/Val/Val/JPEGImages'
+VALID_DIR_LABELS: '../input/Val/Val/JPEGImages'
+# Optional test data path. If given, test paths (data) will be used in
+# `eval.py`.
+TEST_DIR_IMAGES: '../input/Test/Test/JPEGImages'
+TEST_DIR_LABELS: '../input/Test/Test/JPEGImages'
+
+# Class names.
+CLASSES: [
+    '__background__',
+    'person'
+]
+
+# Number of classes (object classes + 1 for background class in Faster RCNN).
+NC: 2
+
+# Whether to save the predictions of the validation set while training.
+SAVE_VALID_PREDICTION_IMAGES: True
