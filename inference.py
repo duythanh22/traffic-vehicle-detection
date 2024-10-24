@@ -207,7 +207,9 @@ def main(args):
     total_fps = 0
     for i in range(len(test_images)):
         # Get the image file name for saving output later on.
-        image_name = test_images[i].split(os.path.sep)[-1].split('.')[0]
+        # image_name = test_images[i].split(os.path.sep)[-1].split('.')[0]
+        image_name = os.path.splitext(os.path.basename(test_images[i]))[0]
+
         orig_image = cv2.imread(test_images[i])
         frame_height, frame_width, _ = orig_image.shape
         if args['imgsz'] != None:
@@ -265,12 +267,14 @@ def main(args):
                 plt.axis('off')
                 plt.show()
 
+            # Trong hàm `main`:
             if args['table']:
-                for box, label in zip(draw_boxes, pred_classes):
+                for box, label, score in zip(draw_boxes, pred_classes, scores):
                     xmin, ymin, xmax, ymax = box
                     width = xmax - xmin
                     height = ymax - ymin
 
+                    # Lưu thông tin bounding box cùng với confidence score vào dictionary.
                     pred_boxes[box_id] = {
                         "image": image_name,
                         "label": str(label),
@@ -280,13 +284,15 @@ def main(args):
                         "ymax": ymax,
                         "width": width,
                         "height": height,
-                        "area": width * height
-                    }                    
+                        "area": width * height,
+                        "confidence_score": float(score)  # Thêm confidence score
+                    }
                     box_id = box_id + 1
 
+                # Tạo DataFrame và lưu ra file CSV.
                 df = pandas.DataFrame.from_dict(pred_boxes, orient='index')
                 df = df.fillna(0)
-                df.to_csv(f"{OUT_DIR}/boxes.csv", index=False, sep=' ')
+                df.to_csv(f"{OUT_DIR}/_boxes.csv", index=False, sep=' ')
 
         cv2.imwrite(f"{OUT_DIR}/{image_name}.jpg", orig_image)
         print(f"Image {i+1} done...")
