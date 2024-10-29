@@ -13,6 +13,8 @@ python train.py --model fasterrcnn_resnet50_fpn --epochs 2 --use-train-aug --dat
 # Distributed training:
 export CUDA_VISIBLE_DEVICES=0,1
 python -m torch.distributed.launch --nproc_per_node=2 --use_env train.py --data data_configs/smoke.yaml --epochs 100 --model fasterrcnn_resnet50_fpn --name smoke_training --batch 16
+
+
 """
 from torch_utils.engine import (
     train_one_epoch, evaluate, utils
